@@ -1,0 +1,5 @@
+bin/
+
+# IDE files
+.idea/
+.vscode/
