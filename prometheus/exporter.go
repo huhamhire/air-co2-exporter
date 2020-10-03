@@ -68,9 +68,9 @@ func (e *Exporter) SetPpmCo2(value uint16) {
 func IndexHandler(metricsPath *string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`<html>
-			<head><title>Co2 Exporter</title></head>
+			<head><title>Air Co2 Exporter</title></head>
 			<body>
-			<h1>Co2 Exporter</h1>
+			<h1>Air Co2 Exporter</h1>
 			<p><a href="` + *metricsPath + `">Metrics</a></p>
 			</body>
 			</html>`))

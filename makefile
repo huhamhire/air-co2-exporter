@@ -6,11 +6,11 @@ ifeq ($(OS),Windows_NT)
 endif
 
 INFO_PATH:=github.com/prometheus/common/version
-DOCKER_IMG=co2-exporter
+DOCKER_IMG=air-co2-exporter
 
 .PHONY: build
 build:
-	@echo "> building co2_exporter"
+	@echo "> building air_co2_exporter"
 	@go build -ldflags "\
 		-X ${INFO_PATH}.Version=${VERSION} \
 		-X ${INFO_PATH}.Revision=`git rev-parse HEAD` \
@@ -18,7 +18,7 @@ build:
 		-X ${INFO_PATH}.BuildUser=${USER} \
 		-X ${INFO_PATH}.BuildDate=`date -u '+%Y-%m-%d_%H:%M:%S'`" \
 		-gcflags "all=-trimpath=${GOPATH}" \
-		-o ./bin/co2_exporter${OS_EXEC} \
+		-o ./bin/air_co2_exporter${OS_EXEC} \
 		main.go
 
 docker-build:
@@ -29,4 +29,4 @@ docker-run:
 
 .PHONY: clean
 clean:
-	rm -rf co2_exporter
+	rm -rf ./bin/*

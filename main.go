@@ -65,7 +65,7 @@ func main() {
 		_ = level.Error(Logger).Log("err", err)
 		os.Exit(1)
 	}
-	_ = level.Debug(Logger).Log("msg", "TFA device connected")
+	_ = level.Debug(Logger).Log("msg", "monitor device connected")
 
 	// Setup prometheus metrics server
 	exporter := prometheus.NewExporter()
@@ -78,7 +78,7 @@ func main() {
 		}
 	}()
 
-	_ = level.Info(Logger).Log("msg", "Starting Co2 Exporter", "version", version.Info())
+	_ = level.Info(Logger).Log("msg", "Starting Air Co2 Exporter", "version", version.Info())
 
 	// Bind to http service
 	handler := http.NewServeMux()
@@ -100,7 +100,7 @@ func main() {
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-signals
-		_ = level.Info(Logger).Log("msg", "Shutting down Co2 Exporter")
+		_ = level.Info(Logger).Log("msg", "Shutting down Air Co2 Exporter")
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		_ = server.Shutdown(ctx)
