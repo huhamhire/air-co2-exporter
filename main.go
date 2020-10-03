@@ -3,6 +3,7 @@ package main
 import (
 	"co2-exporter/monitor"
 	"co2-exporter/prometheus"
+	"context"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/prometheus/common/promlog"
@@ -11,6 +12,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -53,7 +56,7 @@ func main() {
 	device := monitor.DefaultDevice()
 	mon := monitor.NewDeviceMonitor(device)
 	mon.SetLogger(&Logger)
-	_, err := mon.Connect()
+	disconnect, err := mon.Connect()
 	if err != nil {
 		_ = level.Error(Logger).Log("err", err)
 		os.Exit(1)
@@ -73,12 +76,33 @@ func main() {
 	_ = level.Info(Logger).Log("msg", "Starting Co2 Exporter", "version", version.Info())
 
 	// Bind to http service
-	http.Handle(*metricsPath, exporter.Handler)
-	http.Handle("/", prometheus.IndexHandler(metricsPath))
+	handler := http.NewServeMux()
+	handler.Handle(*metricsPath, exporter.Handler)
+	handler.Handle("/", prometheus.IndexHandler(metricsPath))
+	server := &http.Server{Addr: *listenAddress, Handler: handler}
+	go func() {
+		_ = level.Info(Logger).Log("msg", "Listening on", "address", *listenAddress)
+		if err := server.ListenAndServe(); err != http.ErrServerClosed {
+			_ = level.Error(Logger).Log("err", err)
+			os.Exit(1)
+		}
+	}()
 
-	_ = level.Info(Logger).Log("msg", "Listening on", "address", *listenAddress)
-	if err := http.ListenAndServe(*listenAddress, nil); err != nil {
-		_ = level.Error(Logger).Log("err", err)
-		os.Exit(1)
-	}
+	// Graceful shutdown
+	signals := make(chan os.Signal, 1)
+	shutdown := make(chan bool)
+
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		<-signals
+		_ = level.Info(Logger).Log("msg", "Shutting down Co2 Exporter")
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_ = server.Shutdown(ctx)
+		disconnect()
+		close(shutdown)
+	}()
+
+	<-shutdown
+	os.Exit(0)
 }
