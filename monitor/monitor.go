@@ -44,6 +44,9 @@ func (m *DeviceMonitor) Connect() (done func(), err error) {
 	if err != nil {
 		return nil, err
 	}
+	if dev == nil {
+		return nil, errors.New("device not found")
+	}
 	_ = dev.SetAutoDetach(true)
 	inf, done, _ := dev.DefaultInterface()
 
