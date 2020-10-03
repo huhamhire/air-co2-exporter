@@ -26,6 +26,10 @@ var (
 		"web.telemetry-path",
 		"Path under which to expose metrics.",
 	).Default("/metrics").String()
+	labelTag = kingpin.Flag(
+		"label.tag",
+		"Tag for exposed metrics.",
+	).Short('t').Envar("LABEL_TAG").Default("default").String()
 )
 
 var Logger log.Logger
@@ -46,8 +50,8 @@ func pollSensorRecord(mon *monitor.DeviceMonitor, exporter *prometheus.Exporter)
 		_ = level.Error(Logger).Log("err", err)
 		return
 	}
-	exporter.SetDefaultTemp(mon.GetTemp())
-	exporter.SetDefaultPpmCo2(mon.GetCo2())
+	exporter.SetTemp(mon.GetTemp())
+	exporter.SetPpmCo2(mon.GetCo2())
 }
 
 func main() {
@@ -65,6 +69,7 @@ func main() {
 
 	// Setup prometheus metrics server
 	exporter := prometheus.NewExporter()
+	exporter.SetLabelTag(*labelTag)
 
 	go func() {
 		for {

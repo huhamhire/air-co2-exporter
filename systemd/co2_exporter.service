@@ -6,7 +6,7 @@ User=prometheus
 Group=prometheus
 Restart=on-failure
 ExecStart=/usr/local/bin/co2_exporter \
-        --web.listen-address=:9101 \
+        --web.listen-address=:9110 \
         --log.level=warn
 
 [Install]

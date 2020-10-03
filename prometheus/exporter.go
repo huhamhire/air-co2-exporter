@@ -11,6 +11,7 @@ type Exporter struct {
 	GaugeTemp *prometheus.GaugeVec
 	GaugeCo2  *prometheus.GaugeVec
 	Handler   http.Handler
+	labelTag  string
 }
 
 func NewExporter() *Exporter {
@@ -30,6 +31,7 @@ func NewExporter() *Exporter {
 			},
 			[]string{"tag"},
 		),
+		labelTag: "default",
 	}
 	e.Registry.MustRegister(e.GaugeTemp)
 	e.Registry.MustRegister(e.GaugeCo2)
@@ -43,22 +45,24 @@ func NewExporter() *Exporter {
 	return &e
 }
 
-const defaultTag = "default"
+func (e *Exporter) SetLabelTag(tag string) {
+	e.labelTag = tag
+}
 
-func (e *Exporter) SetTemp(value float64, tag string) {
+func (e *Exporter) setTemp(value float64, tag string) {
 	e.GaugeTemp.WithLabelValues(tag).Set(value)
 }
 
-func (e *Exporter) SetPpmCo2(value uint16, tag string) {
+func (e *Exporter) setPpmCo2(value uint16, tag string) {
 	e.GaugeCo2.WithLabelValues(tag).Set(float64(value))
 }
 
-func (e *Exporter) SetDefaultTemp(value float64) {
-	e.SetTemp(value, defaultTag)
+func (e *Exporter) SetTemp(value float64) {
+	e.setTemp(value, e.labelTag)
 }
 
-func (e *Exporter) SetDefaultPpmCo2(value uint16) {
-	e.SetPpmCo2(value, defaultTag)
+func (e *Exporter) SetPpmCo2(value uint16) {
+	e.setPpmCo2(value, e.labelTag)
 }
 
 func IndexHandler(metricsPath *string) http.Handler {

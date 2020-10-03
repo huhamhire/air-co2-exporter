@@ -25,7 +25,7 @@ docker-build:
 	docker build -f Dockerfile -t ${DOCKER_IMG}:${VERSION} .
 
 docker-run:
-	docker run -it --privileged ${DOCKER_IMG}:${VERSION}
+	docker run --privileged ${DOCKER_IMG}:${VERSION}
 
 .PHONY: clean
 clean:
