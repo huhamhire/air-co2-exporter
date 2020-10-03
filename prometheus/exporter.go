@@ -49,15 +49,15 @@ func (e *Exporter) SetTemp(value float64, tag string) {
 	e.GaugeTemp.WithLabelValues(tag).Set(value)
 }
 
-func (e *Exporter) SetPpmCo2(value int, tag string) {
-	e.GaugeTemp.WithLabelValues(tag).Set(float64(value))
+func (e *Exporter) SetPpmCo2(value uint16, tag string) {
+	e.GaugeCo2.WithLabelValues(tag).Set(float64(value))
 }
 
 func (e *Exporter) SetDefaultTemp(value float64) {
 	e.SetTemp(value, defaultTag)
 }
 
-func (e *Exporter) SetDefaultPpmCo2(value int) {
+func (e *Exporter) SetDefaultPpmCo2(value uint16) {
 	e.SetPpmCo2(value, defaultTag)
 }
 

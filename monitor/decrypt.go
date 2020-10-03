@@ -31,7 +31,7 @@ func DecryptRawData(rawData []byte) [8]byte {
 
 func ValidateChecksum(data [8]byte) error {
 	checksum := data[3]
-	sum := (data[0] + data[1] + data[2] + data[3]) & 0xff
+	sum := (data[0] + data[1] + data[2]) & 0xff
 	if data[4] != 0x0d || checksum != sum {
 		return errors.New("checksum not matched, please check the device")
 	}
