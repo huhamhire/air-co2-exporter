@@ -1,31 +1,36 @@
 VERSION = $(shell cat VERSION)
 
-OS_EXEC:=
-ifeq ($(OS),Windows_NT)
-	OS_EXEC =.exe
-endif
+INFO_PATH := github.com/prometheus/common/version
+APP_NAME = air-co2-exporter
+BIN_NAME = air_co2_exporter
+DOCKER_REGISTRY ?=
 
-INFO_PATH:=github.com/prometheus/common/version
-DOCKER_IMG=air-co2-exporter
+GOPATH ?= `pwd`/../../
 
 .PHONY: build
 build:
-	@echo "> building air_co2_exporter"
-	@go build -ldflags "\
+	@echo "> building ${BIN_NAME}"
+	@GOPATH=${GOPATH} go build -ldflags "\
 		-X ${INFO_PATH}.Version=${VERSION} \
 		-X ${INFO_PATH}.Revision=`git rev-parse HEAD` \
 		-X ${INFO_PATH}.Branch=`git rev-parse --abbrev-ref HEAD` \
 		-X ${INFO_PATH}.BuildUser=${USER} \
-		-X ${INFO_PATH}.BuildDate=`date -u '+%Y-%m-%d_%H:%M:%S'`" \
+		-X ${INFO_PATH}.BuildDate=`date -u '+%Y-%m-%d_%H:%M:%S_UTC'`" \
 		-gcflags "all=-trimpath=${GOPATH}" \
-		-o ./bin/air_co2_exporter${OS_EXEC} \
+		-o ./bin/${BIN_NAME} \
 		main.go
 
 docker-build:
-	docker build -f Dockerfile -t ${DOCKER_IMG}:${VERSION} .
+	docker build -f Dockerfile -t ${APP_NAME}:${VERSION} .
 
 docker-run:
-	docker run --privileged ${DOCKER_IMG}:${VERSION}
+	docker run --privileged ${APP_NAME}:${VERSION}
+
+docker-push:
+	docker tag ${APP_NAME}:${VERSION} ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}
+	docker tag ${APP_NAME}:${VERSION} ${DOCKER_REGISTRY}/${APP_NAME}:latest
+	docker push ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}
+	docker push ${DOCKER_REGISTRY}/${APP_NAME}:latest
 
 .PHONY: clean
 clean:
