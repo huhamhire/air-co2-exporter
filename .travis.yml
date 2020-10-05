@@ -11,7 +11,10 @@ addons:
 services:
   docker
 
-env:
+_env: &env
+  - DOCKER_CLI_EXPERIMENTAL=enabled
+  - DOCKER_BUILDKIT=1
+  - DOCKER_BUILDX_VERSION=0.4.2
   - GO111MODULE=on
 
 cache:
@@ -22,21 +25,34 @@ jobs:
   include:
     - name: linux-amd64
       os: linux
-      dist: xenial
+      dist: focal
       arch: amd64
+      env: *env
     - name: linux-arm64
       os: linux
-      dist: xenial
+      dist: focal
       arch: arm64
+      env: *env
+
+before_install:
+  - echo '{"experimental":true}' | sudo tee /etc/docker/daemon.json
+  - mkdir -p ~/.docker/cli-plugins/
+  - curl -L https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.${TRAVIS_OS_NAME}-${TRAVIS_CPU_ARCH} -o ~/.docker/cli-plugins/docker-buildx
+  - chmod a+x ~/.docker/cli-plugins/docker-buildx
+  - sudo systemctl restart docker
+  - docker buildx version
+
+before_script:
+  - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
 script:
   - make build GOPATH=${GOPATH}
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
   - |
     if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-      make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH};
-      echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
-      make docker-push DOCKER_REGISTRY=${DOCKER_USERNAME};
+      docker buildx create --name docker-multiarch;
+      make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
+      make docker-push OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
     fi
 
 before_deploy:
@@ -45,7 +61,7 @@ before_deploy:
 deploy:
   provider: releases
   api_key: "${GH_TOKEN}"
-  name: "${TRAVIS_TAG} / $(date +'%Y%m%d')"
+  name: "${TRAVIS_TAG} / $(date +'%Y-%m-%d')"
   file_glob: true
   file:
     - dist/*.tar.gz

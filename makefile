@@ -29,16 +29,20 @@ archive:
 		LICENSE
 
 docker-build:
-	docker build -f Dockerfile -t ${APP_NAME}:${VERSION} .
+	docker buildx build \
+		--builder docker-multiarch \
+		--platform ${OS}/${ARCH} \
+		-f Dockerfile \
+		-t ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH} \
+		-t ${DOCKER_REGISTRY}/${APP_NAME}:latest-${OS}-${ARCH} \
+	  	.
 
 docker-run:
 	docker run --privileged ${APP_NAME}:${VERSION}
 
 docker-push:
-	docker tag ${APP_NAME}:${VERSION} ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}
-	docker tag ${APP_NAME}:${VERSION} ${DOCKER_REGISTRY}/${APP_NAME}:latest
-	docker push ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}
-	docker push ${DOCKER_REGISTRY}/${APP_NAME}:latest
+	docker push ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH}
+	docker push ${DOCKER_REGISTRY}/${APP_NAME}:latest-${OS}-${ARCH}
 
 .PHONY: clean
 clean:
