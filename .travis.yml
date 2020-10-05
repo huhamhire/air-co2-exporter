@@ -35,7 +35,7 @@ script:
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
 
 before_deploy:
-  - export TRAVIS_TAG="v$(cat version) / $(date +'%Y%m%d')"
+  - export TRAVIS_TAG="v$(cat VERSION)"
 
 deploy:
   provider: releases
@@ -43,6 +43,7 @@ deploy:
   file_glob: true
   file:
     - dist/*.tar.gz
+  skip_cleanup: true
   overwrite: true
   draft: true
 
