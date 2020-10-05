@@ -22,20 +22,9 @@ branches:
   only:
     - master
 
-matrix:
-  include:
-    - name: linux-amd64
-      os: linux
-      dist: xenial
-      arch: amd64
-    - name: linux-arm64
-      os: linux
-      dist: xenial
-      arch: arm64
-
 script:
   - make build
-  - make build-docker
+  - make docker-build
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
 
 deploy:
@@ -43,7 +32,6 @@ deploy:
   api_key: "${GH_TOKEN}"
   file:
     - dist/*.tar.gz
-  skip_cleanup: true
   overwrite: true
 
 after_deploy:
