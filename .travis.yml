@@ -14,6 +14,10 @@ services:
 env:
   - GO111MODULE=on
 
+cache:
+  directories:
+    - $GOPATH/pkg/mod
+
 jobs:
   include:
     - name: linux-amd64
@@ -25,14 +29,15 @@ jobs:
       dist: xenial
       arch: arm64
 
-branches:
-  only:
-    - master
-
 script:
-  - make build
-  - make docker-build
+  - make build GOPATH=${GOPATH}
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
+  - |
+    if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
+      make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH};
+      echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin;
+      make docker-push DOCKER_REGISTRY=${DOCKER_USERNAME};
+    fi
 
 before_deploy:
   - export TRAVIS_TAG="v$(cat VERSION)"
@@ -40,12 +45,15 @@ before_deploy:
 deploy:
   provider: releases
   api_key: "${GH_TOKEN}"
+  name: "${TRAVIS_TAG} / $(date +'%Y%m%d')"
   file_glob: true
   file:
     - dist/*.tar.gz
   skip_cleanup: true
   overwrite: true
   draft: true
+  on:
+    branch: master
 
-after_deploy:
+after_script:
   - make clean
