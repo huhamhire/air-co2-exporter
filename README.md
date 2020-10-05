@@ -1,5 +1,8 @@
 # Air CO2 Exporter
 
+[![Build Status](https://travis-ci.org/huhamhire/air-co2-exporter.svg?branch=master)](https://travis-ci.org/huhamhire/air-co2-exporter)
+[![Docker Image Pulls](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)
+
 Prometheus exporter for TFA Dostmann air CO2 monitor.
 
 Air CO2 Exporter could read CO2 concentration and indoor temperature metrics from an AirCO2NTROL device.
