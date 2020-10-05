@@ -6,6 +6,8 @@ BIN_NAME = air_co2_exporter
 DOCKER_REGISTRY ?=
 
 GOPATH ?= `pwd`/../../
+OS ?= linux
+ARCH ?= amd64
 
 .PHONY: build
 build:
@@ -19,6 +21,12 @@ build:
 		-gcflags "all=-trimpath=${GOPATH}" \
 		-o ./bin/${BIN_NAME} \
 		main.go
+
+archive:
+	@mkdir -p ./dist
+	tar -czf ./dist/${BIN_NAME}-${VERSION}-${OS}-${ARCH}.tar.gz \
+		bin/${BIN_NAME} \
+		LICENSE
 
 docker-build:
 	docker build -f Dockerfile -t ${APP_NAME}:${VERSION} .
@@ -34,4 +42,4 @@ docker-push:
 
 .PHONY: clean
 clean:
-	rm -rf ./bin/*
+	rm -rf ./bin/* ./dist/*
