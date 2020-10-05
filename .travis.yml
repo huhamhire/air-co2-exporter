@@ -3,10 +3,6 @@ language: go
 go:
   - 1.14.x
 
-arch:
-  - amd64
-  - arm64
-
 addons:
   apt:
     packages:
@@ -18,6 +14,17 @@ services:
 env:
   - GO111MODULE=on
 
+jobs:
+  include:
+    - name: linux-amd64
+      os: linux
+      dist: xenial
+      arch: amd64
+    - name: linux-arm64
+      os: linux
+      dist: xenial
+      arch: arm64
+
 branches:
   only:
     - master
@@ -27,12 +34,17 @@ script:
   - make docker-build
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
 
+before_deploy:
+  - export TRAVIS_TAG="v$(cat version) / $(date +'%Y%m%d')"
+
 deploy:
   provider: releases
   api_key: "${GH_TOKEN}"
+  file_glob: true
   file:
     - dist/*.tar.gz
   overwrite: true
+  draft: true
 
 after_deploy:
   - make clean
