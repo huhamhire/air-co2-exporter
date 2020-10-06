@@ -26,7 +26,8 @@ archive:
 	@mkdir -p ./dist
 	tar -czf ./dist/${BIN_NAME}-${VERSION}-${OS}-${ARCH}.tar.gz \
 		bin/${BIN_NAME} \
-		LICENSE
+		README.md \
+		LICENSE 
 
 docker-build:
 	docker buildx build \

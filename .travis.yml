@@ -63,8 +63,9 @@ jobs:
       script: *build
       deploy: *deploy
 
-    - stage: Docker-Release
-      if: branch = master
+    - name: Release
+      stage: Docker-Release
+      if: branch = master OR tag IS present
       env: *env
       script:
         - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}

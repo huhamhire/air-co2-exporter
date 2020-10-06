@@ -10,7 +10,7 @@ Air CO2 Exporter could read CO2 concentration and indoor temperature metrics fro
 
 This project is a golang implementation ported from the old Node.js project which shares similar functions. The new exporter reduced deployment file size and runtime dependencies, added support for docker and kubernetes enviroment, and more easy to use.
 
-Node.js exporter (deprecated): [https://github.com/huhamhire/co2-monitor-exporter](https://github.com/huhamhire/co2-monitor-exporter)
+Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://github.com/huhamhire/co2-monitor-exporter)
 
 ## Contents
 
