@@ -1,5 +1,6 @@
 package monitor
 
+// Config structure
 type Config struct {
 	randomKey []byte
 	rType     uint8
@@ -21,4 +22,5 @@ var conf = Config{
 const (
 	dataTypeTemp byte = 0x42
 	dataTypeCo2  byte = 0x50
+	dataTypeHum  byte = 0x41
 )

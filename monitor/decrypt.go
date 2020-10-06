@@ -11,6 +11,7 @@ var (
 	shuffle = []uint8{2, 4, 0, 7, 1, 6, 5, 3}
 )
 
+// DecryptRawData - decrypt data from raw data
 func DecryptRawData(rawData []byte) [8]byte {
 	var dataXor [8]byte
 	for i := 0; i < len(cState); i++ {
@@ -29,6 +30,7 @@ func DecryptRawData(rawData []byte) [8]byte {
 	return results
 }
 
+// ValidateChecksum - calculate and validate checksum from decrypted data
 func ValidateChecksum(data [8]byte) error {
 	checksum := data[3]
 	sum := (data[0] + data[1] + data[2]) & 0xff

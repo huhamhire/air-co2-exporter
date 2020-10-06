@@ -8,11 +8,14 @@ import (
 	"math"
 )
 
+// DeviceMonitorMetrics structure
 type DeviceMonitorMetrics struct {
 	Temperature float64
 	PpmCo2      uint16
+	Humidity    float64
 }
 
+// DeviceMonitor object
 type DeviceMonitor struct {
 	device    Device
 	metrics   DeviceMonitorMetrics
@@ -21,10 +24,12 @@ type DeviceMonitor struct {
 	logger    *log.Logger
 }
 
+// NewDeviceMonitor - create a new DeviceMonitor instance.
 func NewDeviceMonitor(dev Device) *DeviceMonitor {
 	return &DeviceMonitor{
 		device: dev,
 		metrics: DeviceMonitorMetrics{
+			0,
 			0,
 			0,
 		},
@@ -34,10 +39,12 @@ func NewDeviceMonitor(dev Device) *DeviceMonitor {
 	}
 }
 
+// SetLogger - set logger for current DeviceMonitor
 func (m *DeviceMonitor) SetLogger(logger *log.Logger) {
 	m.logger = logger
 }
 
+// Connect to device
 func (m *DeviceMonitor) Connect() (done func(), err error) {
 	ctx := gousb.NewContext()
 	dev, err := ctx.OpenDeviceWithVIDPID(m.device.vid, m.device.pid)
@@ -65,6 +72,7 @@ func (m *DeviceMonitor) Connect() (done func(), err error) {
 	return done, nil
 }
 
+// ReadData - read decoded data from device
 func (m *DeviceMonitor) ReadData() error {
 	rawData := make([]byte, m.endPoint.Desc.MaxPacketSize)
 	_, err := m.endPoint.Read(rawData[:])
@@ -84,7 +92,7 @@ func toFixed(num float64, precision int) float64 {
 	return float64(int(num*p)) / p
 }
 
-// Decode raw data from sensor device
+// decodeSensorData - Decode raw data from sensor device
 func (m *DeviceMonitor) decodeSensorData(data [8]byte) error {
 	if m.connected != true {
 		return errors.New("device not connected")
@@ -109,14 +117,27 @@ func (m *DeviceMonitor) decodeSensorData(data [8]byte) error {
 		if m.logger != nil {
 			_ = level.Debug(*m.logger).Log("msg", "co2 metric", "value", ppmCo2)
 		}
+	case dataTypeHum:
+		humidity := float64(value) / 100
+		m.metrics.Humidity = humidity
+		if m.logger != nil {
+			_ = level.Debug(*m.logger).Log("msg", "humidity metric", "value", humidity)
+		}
 	}
 	return nil
 }
 
+// GetTemp - get latest temperature value
 func (m *DeviceMonitor) GetTemp() float64 {
 	return m.metrics.Temperature
 }
 
+// GetCo2 - get latest CO2 concentration value
 func (m *DeviceMonitor) GetCo2() uint16 {
 	return m.metrics.PpmCo2
+}
+
+// GetHum - get latest Relative Humidity
+func (m *DeviceMonitor) GetHum() float64 {
+	return m.metrics.Humidity
 }
