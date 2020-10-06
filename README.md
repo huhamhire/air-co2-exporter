@@ -32,7 +32,10 @@ Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://gi
 
 ### Requirements
 
-* Operating System: Linux x86_64
+* Operating System: Linux
+* CPU Architecture Supported:
+  - amd64
+  - arm64
 
 Excutable files can be built for other operating systems like Windows, OS X, or other platforms like ARM devices. However, there could be issues related to libusb library on OS other than Linux.
 
@@ -212,7 +215,7 @@ Other `AirCO2NTROL` devices with more metrics has not been tested. Supplement fo
 
 ## Limitations
 
-* Only support Linux amd64 platforms currently.
+* Only support Linux amd64 and arm64 platforms currently.
 * `air_co2_exporter` could read metrics from only one `AirCO2NTROL` device only.
 * Device ID (`VID: 0x04D9, PID: 0xA052`) of AirCO2NTROL Mini is hard coded in the exporterd currently.
 
