@@ -45,6 +45,15 @@ cache:
 
 jobs:
   include:
+    - name: Lint
+      stage: Lint
+      os: linux
+      dist: focal
+      arch: amd64
+      env: *env
+      script:
+        - make lint
+
     - name: Linux-amd64
       stage: Build
       os: linux
@@ -66,6 +75,8 @@ jobs:
     - name: Release
       stage: Docker-Release
       if: branch = master OR tag IS present
+      os: linux
+      dist: focal
       env: *env
       script:
         - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}
