@@ -17,22 +17,57 @@ _env: &env
   - DOCKER_BUILDX_VERSION=0.4.2
   - GO111MODULE=on
 
+_build_script: &build
+  - make build GOPATH=${GOPATH}
+  - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
+  - |
+    if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
+      docker buildx create --name docker-multiarch;
+      make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
+    fi
+
+_deploy: &deploy
+  provider: releases
+  api_key: "${GH_TOKEN}"
+  name: "${TRAVIS_TAG} / $(date +'%Y-%m-%d')"
+  file_glob: true
+  file:
+    - dist/*.tar.gz
+  skip_cleanup: true
+  overwrite: true
+  draft: true
+  on:
+    branch: master
+
 cache:
   directories:
     - $GOPATH/pkg/mod
 
 jobs:
   include:
-    - name: linux-amd64
+    - name: Linux-amd64
+      stage: Build
       os: linux
       dist: focal
       arch: amd64
       env: *env
-    - name: linux-arm64
+      script: *build
+      deploy: *deploy
+
+    - name: Linux-arm64
+      stage: Build
       os: linux
       dist: focal
       arch: arm64
       env: *env
+      script: *build
+      deploy: *deploy
+
+    - stage: Docker-Release
+      if: branch = master
+      env: *env
+      script:
+        - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}
 
 before_install:
   - echo '{"experimental":true}' | sudo tee /etc/docker/daemon.json
@@ -45,31 +80,8 @@ before_install:
 before_script:
   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-script:
-  - make build GOPATH=${GOPATH}
-  - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
-  - |
-    if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-      docker buildx create --name docker-multiarch;
-      make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
-      make docker-push OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
-    fi
-
 before_deploy:
   - export TRAVIS_TAG="v$(cat VERSION)"
-
-deploy:
-  provider: releases
-  api_key: "${GH_TOKEN}"
-  name: "${TRAVIS_TAG} / $(date +'%Y-%m-%d')"
-  file_glob: true
-  file:
-    - dist/*.tar.gz
-  skip_cleanup: true
-  overwrite: true
-  draft: true
-  on:
-    branch: master
 
 after_script:
   - make clean

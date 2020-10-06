@@ -34,15 +34,22 @@ docker-build:
 		--platform ${OS}/${ARCH} \
 		-f Dockerfile \
 		-t ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH} \
-		-t ${DOCKER_REGISTRY}/${APP_NAME}:latest-${OS}-${ARCH} \
-	  	.
+	  	--push .
 
 docker-run:
 	docker run --privileged ${APP_NAME}:${VERSION}
 
-docker-push:
-	docker push ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH}
-	docker push ${DOCKER_REGISTRY}/${APP_NAME}:latest-${OS}-${ARCH}
+docker-merge-manifest:
+	docker manifest create \
+		${DOCKER_REGISTRY}/${APP_NAME}:latest \
+		${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-linux-amd64 \
+		${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-linux-arm64
+	docker manifest create \
+        ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION} \
+        ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-linux-amd64 \
+        ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-linux-arm64
+	docker manifest push --purge ${DOCKER_REGISTRY}/${APP_NAME}:latest
+	docker manifest push --purge ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}
 
 .PHONY: clean
 clean:
