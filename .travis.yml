@@ -50,6 +50,8 @@ jobs:
       os: linux
       dist: focal
       arch: amd64
+      install:
+        - go get -u golang.org/x/lint/golint
       env: *env
       script:
         - make lint
