@@ -2,6 +2,7 @@ package monitor
 
 import (
 	"errors"
+	"fmt"
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/log/level"
 	"github.com/google/gousb"
@@ -68,10 +69,20 @@ func (m *DeviceMonitor) Connect() (done func(), err error) {
 func (m *DeviceMonitor) ReadData() error {
 	rawData := make([]byte, m.endPoint.Desc.MaxPacketSize)
 	_, err := m.endPoint.Read(rawData[:])
+
 	if err != nil {
 		return err
 	}
-	data := DecryptRawData(rawData[:])
+
+	level.Debug(*m.logger).Log("msg", fmt.Sprintf("Raw data: %v", rawData))
+
+	var data [8]byte
+	if rawData[4] != 0x0d {
+		data = DecryptRawData(rawData[:])
+	} else {
+		copy(data[:], rawData)
+	}
+
 	err = m.decodeSensorData(data)
 	if err != nil {
 		return err
