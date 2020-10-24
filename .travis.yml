@@ -60,7 +60,6 @@ jobs:
     - name: Linux-amd64
       stage: Build
       os: linux
-      virt: lxd
       arch: amd64
       env: *env
       script: *build
@@ -69,7 +68,6 @@ jobs:
     - name: Linux-arm64
       stage: Build
       os: linux
-      virt: lxd
       arch: arm64
       env: *env
       script: *build
@@ -81,7 +79,6 @@ jobs:
       os: linux
       dist: focal
       env: *env
-      virt: lxd
       script:
         - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}
 
