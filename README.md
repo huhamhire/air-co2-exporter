@@ -209,8 +209,9 @@ spec:
 ## Compatible Devices
 
 * [TFA Dostmann AirCO2NTROL Mini - Monitor CO2 31.5006.02](https://www.amazon.de/dp/B00TH3OW4Q)
+* [CO2Meter RAD-0301 Mini CO2 Monitor](https://www.amazon.com/dp/B00H7HFINS)
 
-Other `AirCO2NTROL` devices with more metrics has not been tested. Supplement for compatible device list is always welcomed.
+Other `AirCO2NTROL` devices with more metrics have not been tested. Supplement for compatible device list is always welcomed.
 
 
 ## Limitations
