@@ -4,6 +4,7 @@
 
 * Add support for AIRCO2NTROL COACH.
 * Add support for CO2Meter RAD-0301.
+* Fix musl capability issue with glibc binary in alpine images. (Issue #1)
 
 ## 0.2.0
 
