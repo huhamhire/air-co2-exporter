@@ -34,12 +34,12 @@ archive:
 		LICENSE 
 
 docker-build:
-	docker buildx build \
-		--builder docker-multiarch \
-		--platform ${OS}/${ARCH} \
-		-f Dockerfile \
+	docker build -f Dockerfile \
 		-t ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH} \
-	  	--push .
+		.
+
+docker-push:
+	docker push ${DOCKER_REGISTRY}/${APP_NAME}:${VERSION}-${OS}-${ARCH}
 
 docker-run:
 	docker run --privileged ${APP_NAME}:${VERSION}

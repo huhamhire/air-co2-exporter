@@ -23,8 +23,8 @@ _build_script: &build
   - make archive OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH}
   - |
     if [ ${TRAVIS_BRANCH} == "master" ] && [ ${TRAVIS_PULL_REQUEST} == "false" ]; then
-      docker buildx create --name docker-multiarch;
       make docker-build OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
+      make docker-push OS=${TRAVIS_OS_NAME} ARCH=${TRAVIS_CPU_ARCH} DOCKER_REGISTRY=${DOCKER_USERNAME};
     fi
 
 _deploy: &deploy
@@ -51,6 +51,7 @@ jobs:
       os: linux
       dist: focal
       arch: amd64
+      virt: lxd
       install:
         - go get -u golang.org/x/lint/golint
       env: *env
@@ -60,7 +61,9 @@ jobs:
     - name: Linux-amd64
       stage: Build
       os: linux
+      dist: focal
       arch: amd64
+      virt: lxd
       env: *env
       script: *build
       deploy: *deploy
@@ -68,7 +71,9 @@ jobs:
     - name: Linux-arm64
       stage: Build
       os: linux
+      dist: focal
       arch: arm64
+      virt: lxd
       env: *env
       script: *build
       deploy: *deploy
@@ -78,17 +83,10 @@ jobs:
       if: branch = master OR tag IS present
       os: linux
       dist: focal
+      virt: lxd
       env: *env
       script:
         - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}
-
-before_install:
-  - echo '{"experimental":true}' | sudo tee /etc/docker/daemon.json
-  - mkdir -p ~/.docker/cli-plugins/
-  - curl -L https://github.com/docker/buildx/releases/download/v${DOCKER_BUILDX_VERSION}/buildx-v${DOCKER_BUILDX_VERSION}.${TRAVIS_OS_NAME}-${TRAVIS_CPU_ARCH} -o ~/.docker/cli-plugins/docker-buildx
-  - chmod a+x ~/.docker/cli-plugins/docker-buildx
-  - sudo systemctl restart docker
-  - docker buildx version
 
 before_script:
   - echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
