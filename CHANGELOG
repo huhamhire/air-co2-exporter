@@ -1,3 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+* Add support for AIRCO2NTROL COACH.
+
 ## 0.2.0
+
+* Ported from node.js project.

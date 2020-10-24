@@ -9,6 +9,10 @@ GOPATH ?= `pwd`/../../
 OS ?= linux
 ARCH ?= amd64
 
+.PHONY: lint
+lint:
+	${GOPATH}/bin/golint -set_exit_status ./...
+
 .PHONY: build
 build:
 	@echo "> building ${BIN_NAME}"

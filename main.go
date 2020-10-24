@@ -32,8 +32,10 @@ var (
 	).Short('t').Envar("LABEL_TAG").Default("default").String()
 )
 
+// Logger - Default logger
 var Logger log.Logger
 
+// InitCli - Config parameters for CLI use
 func InitCli() {
 	var logConfig = &promlog.Config{}
 	flag.AddFlags(kingpin.CommandLine, logConfig)
@@ -52,6 +54,7 @@ func pollSensorRecord(mon *monitor.DeviceMonitor, exporter *prometheus.Exporter)
 	}
 	exporter.SetTemp(mon.GetTemp())
 	exporter.SetPpmCo2(mon.GetCo2())
+	exporter.SetRh(mon.GetHum())
 }
 
 func main() {
