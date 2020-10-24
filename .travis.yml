@@ -13,9 +13,6 @@ services:
   docker
 
 _env: &env
-  - DOCKER_CLI_EXPERIMENTAL=enabled
-  - DOCKER_BUILDKIT=1
-  - DOCKER_BUILDX_VERSION=0.4.2
   - GO111MODULE=on
 
 _build_script: &build
@@ -49,7 +46,7 @@ jobs:
     - name: Lint
       stage: Lint
       os: linux
-      dist: focal
+      dist: xenial
       arch: amd64
       virt: lxd
       install:
@@ -61,7 +58,7 @@ jobs:
     - name: Linux-amd64
       stage: Build
       os: linux
-      dist: focal
+      dist: xenial
       arch: amd64
       virt: lxd
       env: *env
@@ -71,7 +68,7 @@ jobs:
     - name: Linux-arm64
       stage: Build
       os: linux
-      dist: focal
+      dist: xenial
       arch: arm64
       virt: lxd
       env: *env
