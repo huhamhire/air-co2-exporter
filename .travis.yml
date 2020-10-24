@@ -12,6 +12,7 @@ services:
   docker
 
 _env: &env
+  - DOCKER_CLI_EXPERIMENTAL=enabled
   - GO111MODULE=on
 
 _build_script: &build
