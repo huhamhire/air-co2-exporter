@@ -48,7 +48,7 @@ jobs:
     - name: Linux-amd64
       stage: Build
       os: linux
-      dist: focal
+      virt: lxd
       arch: amd64
       env: *env
       script: *build
@@ -57,7 +57,7 @@ jobs:
     - name: Linux-arm64
       stage: Build
       os: linux
-      dist: focal
+      virt: lxd
       arch: arm64
       env: *env
       script: *build
@@ -67,6 +67,7 @@ jobs:
       stage: Docker-Release
       if: branch = master OR tag IS present
       env: *env
+      virt: lxd
       script:
         - make docker-merge-manifest DOCKER_REGISTRY=${DOCKER_USERNAME}
 
