@@ -7,7 +7,7 @@ addons:
   apt:
     packages:
       - libusb-1.0-0-dev
-      - musl-dev
+      - musl-tools
 
 services:
   docker

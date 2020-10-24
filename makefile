@@ -16,7 +16,7 @@ lint:
 .PHONY: build
 build:
 	@echo "> building ${BIN_NAME}"
-	@GOPATH=${GOPATH} go build -ldflags "\
+	@CC_FOR_TARGET="x86_64-linux-musl-gcc" GOPATH=${GOPATH} go build -ldflags "\
 		-X ${INFO_PATH}.Version=${VERSION} \
 		-X ${INFO_PATH}.Revision=`git rev-parse HEAD` \
 		-X ${INFO_PATH}.Branch=`git rev-parse --abbrev-ref HEAD` \
