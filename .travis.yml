@@ -7,7 +7,6 @@ addons:
   apt:
     packages:
       - libusb-1.0-0-dev
-      - musl-tools
 
 services:
   docker
@@ -46,7 +45,7 @@ jobs:
     - name: Lint
       stage: Lint
       os: linux
-      dist: xenial
+      dist: focal
       arch: amd64
       virt: lxd
       install:
@@ -58,7 +57,7 @@ jobs:
     - name: Linux-amd64
       stage: Build
       os: linux
-      dist: xenial
+      dist: focal
       arch: amd64
       virt: lxd
       env: *env
@@ -68,7 +67,7 @@ jobs:
     - name: Linux-arm64
       stage: Build
       os: linux
-      dist: xenial
+      dist: focal
       arch: arm64
       virt: lxd
       env: *env
