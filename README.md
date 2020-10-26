@@ -1,14 +1,16 @@
 # Air CO2 Exporter
 
 [![Build Status](https://travis-ci.org/huhamhire/air-co2-exporter.svg?branch=master)](https://travis-ci.org/huhamhire/air-co2-exporter)
+[![Go Report Card](https://goreportcard.com/badge/github.com/huhamhire/air-co2-exporter)](https://goreportcard.com/report/github.com/huhamhire/air-co2-exporter)
 [![Docker Image Pulls](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)
+[![License](https://img.shields.io/badge/license-MIT-orange.svg)](https://opensource.org/licenses/MIT)
 
 Prometheus exporter for TFA Dostmann air CO2 monitor.
 
 Air CO2 Exporter could read CO2 concentration and indoor temperature metrics from an AirCO2NTROL device.
 
 
-This project is a golang implementation ported from the old Node.js project which shares similar functions. The new exporter reduced deployment file size and runtime dependencies, added support for docker and kubernetes enviroment, and more easy to use.
+This project is a golang implementation ported from the old Node.js project which shares similar functions. The new exporter reduced deployment file size and runtime dependencies, added support for the docker and kubernetes environment, and more easy to use.
 
 Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://github.com/huhamhire/co2-monitor-exporter)
 
@@ -37,7 +39,7 @@ Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://gi
   - amd64
   - arm64
 
-Excutable files can be built for other operating systems like Windows, OS X, or other platforms like ARM devices. However, there could be issues related to libusb library on OS other than Linux.
+Executable files can be built for other operating systems like Windows, OS X, or other platforms like ARM devices. However, there could be issues related to `libusb` library on OS other than Linux.
 
 ### Dependencies
 
@@ -59,7 +61,7 @@ apk add libusb
 
 ### Install
 
-Download the `air_co2_exporter` excutable file and put it under system path like `/usr/local/bin/`.
+Download the `air_co2_exporter` executable file and put it under system path like `/usr/local/bin/`.
 
 
 ## Usage
@@ -86,7 +88,7 @@ Flags:
 
 ### Systemd
 
-If you perferred to manage `air_co2_exporter` by systemd, a systemd unit file should be created.
+If you preferred to manage `air_co2_exporter` by systemd, a systemd unit file should be created.
 
 * `/etc/systemd/system/air_co2_exporter.service`
 
@@ -121,7 +123,7 @@ systemctl enable air_co2_exporter
 
 [https://hub.docker.com/r/huhamhire/air-co2-exporter](https://hub.docker.com/r/huhamhire/air-co2-exporter)
 
-A custom metrics tag can be set by environment virable `LABEL_TAG`.
+A custom metrics tag can be set by environment variable `LABEL_TAG`.
 
 ```bash
 docker run --privileged -p 9110:9110 huhamhire/air-co2-exporter:latest
@@ -129,7 +131,7 @@ docker run --privileged -p 9110:9110 huhamhire/air-co2-exporter:latest
 
 ### Kubernetes
 
-In addition to run with docker, `air-co2-exporter` image is supported to be managed in a kubernetens cluster. 
+In addition to run with docker, `air-co2-exporter` image is supported to be managed in a kubernetes cluster. 
 
 Node(s) attached with `AirCO2NTROL` device can be managed by a specific label. And exporter pod could be deployed to these nodes later.
 
@@ -139,7 +141,7 @@ kubectl label node ${node_name} alpha.monitor.device/air-co2=exists
 
 However, without a kubernetes device plugin implementation, **only** one `air-co2-exporter` pod can be managed on a single node. Use this exporter as `DaemonSet` is recommended in most scenarios.
 
-**⚠ IMPORTANT**: Pod `securityContext` must be set to privileged mode for the exporter to access usb devices on kubernetes host node. Otherwise, it will enconter program panic cause by `libusb error -99`.
+**⚠ IMPORTANT**: Pod `securityContext` must be set to privileged mode for the exporter to access usb devices on kubernetes host node. Otherwise, it will encounter program panic cause by `libusb error -99`.
 
 Here is an example kubernetes DaemonSet configuration.
 
@@ -218,7 +220,7 @@ Other `AirCO2NTROL` devices with more metrics have not been tested. Supplement f
 
 * Only support Linux amd64 and arm64 platforms currently.
 * `air_co2_exporter` could read metrics from only one `AirCO2NTROL` device only.
-* Device ID (`VID: 0x04D9, PID: 0xA052`) of AirCO2NTROL Mini is hard coded in the exporterd currently.
+* Device ID (`VID: 0x04D9, PID: 0xA052`) of AirCO2NTROL Mini is hard coded in the exporter currently.
 
 
 ## Troubleshooting
@@ -229,7 +231,7 @@ Other `AirCO2NTROL` devices with more metrics have not been tested. Supplement f
    panic: libusb: unknown error [code -99]
    ```
 
-   This could happen when `air_co2_exporter` does not have sufficient previleges to access usb devices. Mostly caused by using a docker container environment without `privileged` mode.
+   This could happen when `air_co2_exporter` does not have sufficient privileges to access usb devices. Mostly caused by using a docker container environment without `privileged` mode.
 
 * `libusb` not found
  
@@ -245,7 +247,7 @@ Other `AirCO2NTROL` devices with more metrics have not been tested. Supplement f
    sh: air_co2_exporter: not found
    ```
   
-   Typically seen when used in Apline Linux docker images. Since Alpine image is a compact docker image with the size of only around 5MB. It does not come with a GNU C library (glibc) by default which golang programs required. A `glibc` library like `libc6-compat` on Alpine is required.
+   Typically seen when used in Apline Linux docker images. Since Alpine image is a compact docker image with the size of only around 5 MB. It does not come with a GNU C library (glibc) by default which golang programs required. A `glibc` library like `libc6-compat` on Alpine is required.
   
 
 ## License
