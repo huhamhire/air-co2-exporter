@@ -28,6 +28,7 @@ air-co2-exporter/
 │   │   └── feature_request.md  # Feature request template
 │   └── workflows/
 │       ├── ci.yml              # Go checks, tests, and container validation
+│       ├── dockerhub.yml       # Published-release images and multi-platform manifests
 │       └── release.yml         # Tag validation, native release packages, and release drafts
 ├── monitor/                    # USB access and sensor protocol
 │   ├── config.go               # USB initialization parameters and measurement types
@@ -49,7 +50,7 @@ air-co2-exporter/
 ├── main.go                     # CLI, logging, polling, HTTP serving, and process lifecycle
 ├── makefile                    # Build, validation, and packaging commands
 ├── README.md                   # Installation and usage documentation
-└── VERSION                     # Next planned release version, currently 0.4.0
+└── VERSION                     # Application release version, currently 0.4.0
 ```
 
 Keep this tree and its descriptions in sync when maintained files or directories
@@ -123,5 +124,10 @@ does not validate USB support.
   `VERSION` or whose commits are not contained in `master`.
 - Tag pushes build native Linux amd64 and arm64 archives, generate SHA-256 checksums,
   and create a GitHub Release draft using the matching CHANGELOG section.
-  Review the draft and validation results before publishing. Docker image publication
-  remains a separate release action.
+  Review the draft and validation results before publishing.
+- Publishing a stable GitHub Release triggers Docker Hub builds from its tag.
+  The Docker Hub workflow also supports manual backfills for published stable tags.
+  Configure `DOCKERHUB_USERNAME` as a repository variable and `DOCKERHUB_TOKEN`
+  as a repository secret. Native amd64/arm64 images must pass CLI checks before
+  their combined version manifest is published. Update `latest` only for the
+  latest published stable GitHub Release.

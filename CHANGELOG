@@ -1,6 +1,11 @@
 # Changelog
 
-## 0.4.0 (Unreleased)
+## Unreleased
+
+* Publish native amd64/arm64 Docker Hub images and combined manifests when a stable
+  GitHub Release is published, with manual backfills for existing release tags.
+
+## 0.4.0 (2026-10-11)
 
 * Require Go 1.26 or later and update dependencies to current upstream releases.
 * Migrate logging to the standard library's structured logger and Prometheus promslog.
