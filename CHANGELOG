@@ -9,12 +9,36 @@
 * Cancel polling before releasing USB resources, handle initialization failures,
   and reject short sensor packets before decoding.
 * Add English maintenance guidelines in AGENTS.md and document source-build prerequisites.
+* Suppress harmless USB event-loop `interrupted [code -10]` log messages by
+  upgrading gousb from v1.1.0 to v1.1.3. This addresses [issue #3](https://github.com/huhamhire/air-co2-exporter/issues/3)
+  through the [upstream fix](https://github.com/google/gousb/commit/2f9ed92cb863c87f7bb5fa58a54c6502ef0a5e1f).
+  This change suppresses a misleading event-loop message; it does not suppress
+  errors returned by sensor reads.
+* Add regression coverage for plaintext and encrypted sensor packets, preserving
+  the [issue #2](https://github.com/huhamhire/air-co2-exporter/issues/2) fix already included in 0.3.0.
+
+### Historical issue verification (2026-10-11)
+
+* [Issue #1](https://github.com/huhamhire/air-co2-exporter/issues/1): the published Docker `latest`
+  image, reporting version 0.3.0, and the local 0.4.0 test image both successfully
+  ran `--version` on Linux amd64. The reported glibc/musl relocation error was not reproduced.
+* [Issue #2](https://github.com/huhamhire/air-co2-exporter/issues/2): the merged plaintext-packet
+  fix is present in the local branch. Plaintext and encrypted packet decoding
+  tests pass with the race detector. Real-device readings have not been verified.
+* [Issue #3](https://github.com/huhamhire/air-co2-exporter/issues/3): the published 0.3.0 binary
+  still uses gousb v1.1.0, which logs interrupted event-loop calls as errors.
+  The 0.4.0 dependency includes the upstream suppression. Source inspection
+  confirms the change; a real-device reproduction has not been performed.
 
 ## 0.3.0
 
 * Add support for AIRCO2NTROL COACH.
 * Add support for CO2Meter RAD-0301.
-* Fix musl capability issue with glibc binary in alpine images. (Issue #1)
+* Fix the glibc/musl mismatch by building the Docker binary on Alpine.
+  ([Issue #1](https://github.com/huhamhire/air-co2-exporter/issues/1))
+* Skip decryption when a sensor packet already contains the plaintext marker
+  `0x0d`, correcting zero readings from newer CO2Meter devices.
+  ([Issue #2](https://github.com/huhamhire/air-co2-exporter/issues/2), [PR #5](https://github.com/huhamhire/air-co2-exporter/pull/5))
 
 ## 0.2.0
 
