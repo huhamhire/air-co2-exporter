@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  go:
+    strategy:
+      matrix:
+        go: ['1.26.x', '1.27.x']
+        runner: [ubuntu-24.04, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version: ${{ matrix.go }}
+          cache: true
+      - name: Install USB build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libusb-1.0-0-dev
+      - name: Verify modules
+        run: |
+          go mod tidy
+          git diff --exit-code -- go.mod go.sum
+          go mod verify
+      - run: make lint test build
+      - name: Check CLI
+        run: |
+          ./bin/air_co2_exporter --help
+          ./bin/air_co2_exporter --version | grep "$(cat VERSION)"
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: docker build -t air-co2-exporter:check .
+      - run: docker run --rm air-co2-exporter:check --version

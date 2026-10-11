@@ -1,12 +1,13 @@
 package prometheus
 
 import (
+	"net/http"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"net/http"
 )
 
-// Exporter object
+// Exporter exposes sensor readings through a dedicated Prometheus registry.
 type Exporter struct {
 	Registry  *prometheus.Registry
 	GaugeTemp *prometheus.GaugeVec
@@ -16,7 +17,7 @@ type Exporter struct {
 	labelTag  string
 }
 
-// NewExporter - create a new Exporter instance
+// NewExporter creates an exporter with the default tag label.
 func NewExporter() *Exporter {
 	e := Exporter{
 		Registry: prometheus.NewRegistry(),
@@ -56,7 +57,7 @@ func NewExporter() *Exporter {
 	return &e
 }
 
-// SetLabelTag - set tag label for the exporter instance
+// SetLabelTag sets the label used for subsequent readings, before polling starts.
 func (e *Exporter) SetLabelTag(tag string) {
 	e.labelTag = tag
 }
@@ -73,22 +74,22 @@ func (e *Exporter) setRh(value float64, tag string) {
 	e.GaugeRh.WithLabelValues(tag).Set(value)
 }
 
-// SetTemp - set temperature value
+// SetTemp updates the temperature gauge in degrees Celsius.
 func (e *Exporter) SetTemp(value float64) {
 	e.setTemp(value, e.labelTag)
 }
 
-// SetPpmCo2 - set CO2 value
+// SetPpmCo2 updates the CO2 concentration gauge in ppm.
 func (e *Exporter) SetPpmCo2(value uint16) {
 	e.setPpmCo2(value, e.labelTag)
 }
 
-// SetRh - set RH value
+// SetRh updates the relative humidity gauge in percent.
 func (e *Exporter) SetRh(value float64) {
 	e.setRh(value, e.labelTag)
 }
 
-// IndexHandler - default http handler for index
+// IndexHandler serves the landing page linking to the metrics endpoint.
 func IndexHandler(metricsPath *string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte(`<html>

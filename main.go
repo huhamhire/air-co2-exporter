@@ -1,20 +1,23 @@
 package main
 
 import (
-	"co2-exporter/monitor"
-	"co2-exporter/prometheus"
 	"context"
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
-	"github.com/prometheus/common/promlog"
-	"github.com/prometheus/common/promlog/flag"
-	"github.com/prometheus/common/version"
-	"gopkg.in/alecthomas/kingpin.v2"
+	"errors"
+	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"co2-exporter/monitor"
+	"co2-exporter/prometheus"
+
+	"github.com/alecthomas/kingpin/v2"
+	"github.com/prometheus/common/promslog"
+	"github.com/prometheus/common/promslog/flag"
+	"github.com/prometheus/common/version"
 )
 
 var (
@@ -32,24 +35,25 @@ var (
 	).Short('t').Envar("LABEL_TAG").Default("default").String()
 )
 
-// Logger - Default logger
-var Logger log.Logger
+// Logger is the application logger.
+var Logger *slog.Logger
 
-// InitCli - Config parameters for CLI use
+// InitCli parses command-line options and initializes logging.
 func InitCli() {
-	var logConfig = &promlog.Config{}
+	logConfig := &promslog.Config{}
 	flag.AddFlags(kingpin.CommandLine, logConfig)
 	kingpin.Version(version.Print("co2_exporter"))
 	kingpin.HelpFlag.Short('h')
 	kingpin.Parse()
 
-	Logger = promlog.New(logConfig)
+	Logger = promslog.New(logConfig)
 }
 
-func pollSensorRecord(mon *monitor.DeviceMonitor, exporter *prometheus.Exporter) {
-	err := mon.ReadData()
-	if err != nil {
-		_ = level.Error(Logger).Log("err", err)
+func pollSensorRecord(ctx context.Context, mon *monitor.DeviceMonitor, exporter *prometheus.Exporter) {
+	if err := mon.ReadDataContext(ctx); err != nil {
+		if ctx.Err() == nil {
+			Logger.Error("Failed to read sensor data", "err", err)
+		}
 		return
 	}
 	exporter.SetTemp(mon.GetTemp())
@@ -59,58 +63,80 @@ func pollSensorRecord(mon *monitor.DeviceMonitor, exporter *prometheus.Exporter)
 
 func main() {
 	InitCli()
-	// Setup device connection
-	device := monitor.DefaultDevice()
-	mon := monitor.NewDeviceMonitor(device)
-	mon.SetLogger(&Logger)
-	disconnect, err := mon.Connect()
-	if err != nil {
-		_ = level.Error(Logger).Log("err", err)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+	if err := run(ctx); err != nil {
+		Logger.Error("Exporter stopped", "err", err)
 		os.Exit(1)
 	}
-	_ = level.Debug(Logger).Log("msg", "monitor device connected")
+}
 
-	// Setup prometheus metrics server
+func run(ctx context.Context) error {
+	device := monitor.DefaultDevice()
+	mon := monitor.NewDeviceMonitor(device)
+	mon.SetLogger(Logger)
+	disconnect, err := mon.Connect()
+	if err != nil {
+		return fmt.Errorf("connect to device: %w", err)
+	}
+	defer disconnect()
+	Logger.Debug("monitor device connected")
+
+	// Stop polling before the deferred USB cleanup runs.
 	exporter := prometheus.NewExporter()
 	exporter.SetLabelTag(*labelTag)
 
+	pollCtx, cancelPoll := context.WithCancel(ctx)
+	pollDone := make(chan struct{})
 	go func() {
+		defer close(pollDone)
+		ticker := time.NewTicker(2 * time.Second)
+		defer ticker.Stop()
 		for {
-			time.Sleep(2 * time.Second)
-			pollSensorRecord(mon, exporter)
+			select {
+			case <-pollCtx.Done():
+				return
+			case <-ticker.C:
+				pollSensorRecord(pollCtx, mon, exporter)
+			}
 		}
 	}()
+	defer func() {
+		cancelPoll()
+		<-pollDone
+	}()
 
-	_ = level.Info(Logger).Log("msg", "Starting Air Co2 Exporter", "version", version.Info())
+	Logger.Info("Starting Air Co2 Exporter", "version", version.Info())
 
 	// Bind to http service
 	handler := http.NewServeMux()
 	handler.Handle(*metricsPath, exporter.Handler)
 	handler.Handle("/", prometheus.IndexHandler(metricsPath))
-	server := &http.Server{Addr: *listenAddress, Handler: handler}
+	server := &http.Server{
+		Addr:              *listenAddress,
+		Handler:           handler,
+		ReadHeaderTimeout: 5 * time.Second,
+	}
+	serverErrors := make(chan error, 1)
 	go func() {
-		_ = level.Info(Logger).Log("msg", "Listening on", "address", *listenAddress)
-		if err := server.ListenAndServe(); err != http.ErrServerClosed {
-			_ = level.Error(Logger).Log("err", err)
-			os.Exit(1)
+		Logger.Info("Listening on", "address", *listenAddress)
+		serverErrors <- server.ListenAndServe()
+	}()
+
+	select {
+	case err := <-serverErrors:
+		if !errors.Is(err, http.ErrServerClosed) {
+			return fmt.Errorf("serve HTTP: %w", err)
 		}
-	}()
-
-	// Graceful shutdown
-	signals := make(chan os.Signal, 1)
-	shutdown := make(chan bool)
-
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		<-signals
-		_ = level.Info(Logger).Log("msg", "Shutting down Air Co2 Exporter")
-		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		return nil
+	case <-ctx.Done():
+		Logger.Info("Shutting down Air Co2 Exporter")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = server.Shutdown(ctx)
-		disconnect()
-		close(shutdown)
-	}()
-
-	<-shutdown
-	os.Exit(0)
+		if err := server.Shutdown(shutdownCtx); err != nil {
+			_ = server.Close()
+			return fmt.Errorf("shut down HTTP server: %w", err)
+		}
+		return nil
+	}
 }

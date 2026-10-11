@@ -1,8 +1,6 @@
 package monitor
 
-import (
-	"errors"
-)
+import "errors"
 
 var (
 	cState = []byte{
@@ -11,15 +9,15 @@ var (
 	shuffle = []uint8{2, 4, 0, 7, 1, 6, 5, 3}
 )
 
-// DecryptRawData - decrypt data from raw data
+// DecryptRawData decrypts a sensor packet. rawData must contain at least eight bytes.
 func DecryptRawData(rawData []byte) [8]byte {
 	var dataXor [8]byte
-	for i := 0; i < len(cState); i++ {
+	for i := range cState {
 		idx := shuffle[i]
 		dataXor[idx] = rawData[i] ^ conf.randomKey[idx]
 	}
 	var dataTemp [8]byte
-	for i := 0; i < len(cState); i++ {
+	for i := range cState {
 		dataTemp[i] = ((dataXor[i] >> 3) | (dataXor[(i-1+8)%8] << 5)) & 0xff
 	}
 	var results [8]byte
@@ -30,7 +28,7 @@ func DecryptRawData(rawData []byte) [8]byte {
 	return results
 }
 
-// ValidateChecksum - calculate and validate checksum from decrypted data
+// ValidateChecksum checks the checksum and terminator of a decrypted packet.
 func ValidateChecksum(data [8]byte) error {
 	checksum := data[3]
 	sum := (data[0] + data[1] + data[2]) & 0xff
