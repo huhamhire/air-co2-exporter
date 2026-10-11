@@ -31,7 +31,7 @@ jobs:
       - name: Check CLI
         run: |
           ./bin/air_co2_exporter --help
-          ./bin/air_co2_exporter --version | grep "$(cat VERSION)"
+          ./bin/air_co2_exporter --version 2>&1 | grep -F "version $(cat VERSION)"
   docker:
     runs-on: ubuntu-24.04
     steps:
