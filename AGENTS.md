@@ -20,12 +20,39 @@ changes and keep maintenance work focused on the requested scope.
 
 ## Project structure
 
-- `main.go`: CLI flags, logging, polling, HTTP serving, and process lifecycle.
-- `monitor/`: USB configuration, packet decryption, checksums, and sensor decoding.
-- `prometheus/`: metric definitions, registry, and HTTP handlers.
-- `VERSION`: the next planned release version, currently `0.4.0`.
-- `CHANGELOG`: release notes, including an explicitly unreleased section.
-- `Dockerfile`, `makefile`, and `.github/workflows/`: builds and validation.
+```text
+air-co2-exporter/
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── bug_report.md       # Bug report template
+│   │   └── feature_request.md  # Feature request template
+│   └── workflows/
+│       └── ci.yml              # Go checks, tests, and container validation
+├── monitor/                    # USB access and sensor protocol
+│   ├── config.go               # USB initialization parameters and measurement types
+│   ├── decrypt.go              # Packet decryption and checksum validation
+│   ├── device.go               # USB vendor and product IDs
+│   ├── monitor.go              # Device lifecycle, packet reads, and sensor decoding
+│   └── monitor_test.go         # Sensor protocol regression tests
+├── prometheus/                 # Metrics and HTTP handlers
+│   ├── exporter.go             # Metric definitions, registry, and HTTP handlers
+│   └── exporter_test.go        # Metric exposition regression tests
+├── .dockerignore               # Docker build context exclusions
+├── .gitignore                  # Git working tree exclusions
+├── AGENTS.md                   # Repository maintenance guidelines
+├── CHANGELOG                   # Release notes, including unreleased changes
+├── Dockerfile                  # Container build and runtime images
+├── go.mod                      # Go version requirement and module dependencies
+├── go.sum                      # Module dependency checksums
+├── LICENSE                     # Project license
+├── main.go                     # CLI, logging, polling, HTTP serving, and process lifecycle
+├── makefile                    # Build, validation, and packaging commands
+├── README.md                   # Installation and usage documentation
+└── VERSION                     # Next planned release version, currently 0.4.0
+```
+
+Keep this tree and its descriptions in sync when maintained files or directories
+are added, renamed, removed, or assigned new responsibilities.
 
 ## Toolchain and dependencies
 
