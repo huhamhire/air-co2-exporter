@@ -27,7 +27,8 @@ air-co2-exporter/
 │   │   ├── bug_report.md       # Bug report template
 │   │   └── feature_request.md  # Feature request template
 │   └── workflows/
-│       └── ci.yml              # Go checks, tests, and container validation
+│       ├── ci.yml              # Go checks, tests, and container validation
+│       └── release.yml         # Tag validation, native release packages, and release drafts
 ├── monitor/                    # USB access and sensor protocol
 │   ├── config.go               # USB initialization parameters and measurement types
 │   ├── decrypt.go              # Packet decryption and checksum validation
@@ -117,3 +118,10 @@ does not validate USB support.
 - Keep `VERSION` and `CHANGELOG` aligned. Do not mark a release published prematurely.
 - Describe compatibility changes, validation results, and outstanding hardware checks.
 - Do not create release tags, publish images, or deploy without explicit authorization.
+- After merging the release PR and passing CI, create an annotated `v<VERSION>` tag
+  on the intended `master` commit. The release workflow rejects tags that do not match
+  `VERSION` or whose commits are not contained in `master`.
+- Tag pushes build native Linux amd64 and arm64 archives, generate SHA-256 checksums,
+  and create a GitHub Release draft using the matching CHANGELOG section.
+  Review the draft and validation results before publishing. Docker image publication
+  remains a separate release action.

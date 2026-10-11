@@ -6,6 +6,9 @@
 * Migrate logging to the standard library's structured logger and Prometheus promslog.
   Log records use slog field names (`time`, `level`, `source`, and `msg`).
 * Modernize module-based builds, container images, and Linux amd64/arm64 CI validation.
+* Add a tag-triggered release workflow that validates the version and master ancestry,
+  builds native Linux amd64/arm64 archives, and prepares a GitHub Release draft
+  with release notes and SHA-256 checksums.
 * Cancel polling before releasing USB resources, handle initialization failures,
   and reject short sensor packets before decoding.
 * Add English maintenance guidelines in AGENTS.md and document source-build prerequisites.

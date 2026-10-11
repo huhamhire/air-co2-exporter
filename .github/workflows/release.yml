@@ -1,0 +1,91 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - runner: ubuntu-24.04
+            arch: amd64
+          - runner: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Verify release tag
+        run: |
+          test "$GITHUB_REF_NAME" = "v$(cat VERSION)"
+          git merge-base --is-ancestor HEAD origin/master
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version: '1.27.x'
+          cache: true
+      - name: Install USB build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential pkg-config libusb-1.0-0-dev
+      - name: Validate and package
+        run: |
+          go mod tidy -diff
+          go mod verify
+          make lint test build archive
+          ./bin/air_co2_exporter --help
+          ./bin/air_co2_exporter --version | grep "$(cat VERSION)"
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: release-linux-${{ matrix.arch }}
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  draft:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: release-linux-*
+          path: dist
+          merge-multiple: true
+      - name: Prepare release notes and checksums
+        run: |
+          awk -v version="$(cat VERSION)" '
+            /^## / {
+              if (found) exit
+              if ($0 == "## " version " (Unreleased)" || $0 == "## " version) {
+                found = 1
+                next
+              }
+            }
+            found { print }
+            END { if (!found) exit 1 }
+          ' CHANGELOG > release-notes.md
+          cd dist
+          sha256sum *.tar.gz > SHA256SUMS
+      - name: Create or update draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --json isDraft > existing-release.json 2> release-error.log; then
+            test "$(jq -r .isDraft existing-release.json)" = true
+            gh release edit "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+            gh release upload "$GITHUB_REF_NAME" dist/*.tar.gz dist/SHA256SUMS --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/*.tar.gz dist/SHA256SUMS \
+              --verify-tag --draft --title "$GITHUB_REF_NAME" --notes-file release-notes.md
+          fi
