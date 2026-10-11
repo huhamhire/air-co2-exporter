@@ -1,6 +1,6 @@
 package monitor
 
-// Config structure
+// Config holds the USB initialization parameters.
 type Config struct {
 	randomKey []byte
 	rType     uint8
@@ -13,10 +13,10 @@ var conf = Config{
 	randomKey: []byte{
 		0xc4, 0xc6, 0xc0, 0x92, 0x40, 0x23, 0xdc, 0x96,
 	},
-	rType:   uint8(0x21),
-	request: uint8(0x09),
-	val:     uint16(0x300),
-	idx:     uint16(0x00),
+	rType:   0x21,
+	request: 0x09,
+	val:     0x300,
+	idx:     0x00,
 }
 
 const (

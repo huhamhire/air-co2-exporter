@@ -1,6 +1,6 @@
 # Air CO2 Exporter
 
-[![Build Status](https://travis-ci.org/huhamhire/air-co2-exporter.svg?branch=master)](https://travis-ci.org/huhamhire/air-co2-exporter)
+[![CI](https://github.com/huhamhire/air-co2-exporter/actions/workflows/ci.yml/badge.svg)](https://github.com/huhamhire/air-co2-exporter/actions/workflows/ci.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/huhamhire/air-co2-exporter)](https://goreportcard.com/report/github.com/huhamhire/air-co2-exporter)
 [![Docker Image Pulls](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)](https://img.shields.io/docker/pulls/huhamhire/air-co2-exporter.svg)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](https://opensource.org/licenses/MIT)
@@ -20,6 +20,7 @@ Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://gi
   * [Requirements](#requirements)
   * [Dependencies](#dependencies)
   * [Install](#install)
+  * [Build from Source](#build-from-source)
 * [Usage](#usage)
   * [CLI](#cli)
   * [Systemd](#systemd)
@@ -28,6 +29,7 @@ Node.js exporter: [https://github.com/huhamhire/co2-monitor-exporter](https://gi
 * [Metrics](#metrics)
 * [Compatible Devices](#compatible-devices)
 * [Troubleshooting](#troubleshooting)
+* [Development](#development)
 * [License](#license)
 
 ## Installation
@@ -62,6 +64,36 @@ apk add libusb
 ### Install
 
 Download the `air_co2_exporter` executable file and put it under system path like `/usr/local/bin/`.
+
+### Build from Source
+
+Go 1.26 or later is required. CI validates Go 1.26 and 1.27 on Linux amd64 and arm64.
+The exporter uses CGO: install a C compiler, pkg-config, and libusb development files.
+On Debian or Ubuntu:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential pkg-config libusb-1.0-0-dev
+git clone https://github.com/huhamhire/air-co2-exporter.git
+cd air-co2-exporter
+go mod download
+make build
+./bin/air_co2_exporter --version
+```
+
+The project builds using Go modules from any directory; no GOPATH layout is required.
+`make build` injects release metadata from `VERSION` and Git. For a development binary
+without release metadata, use `CGO_ENABLED=1 go build -o bin/air_co2_exporter .`.
+Cross-compiling requires a C toolchain and libusb libraries for the target platform.
+On Windows, use a Linux WSL environment with these prerequisites, or configure a
+compatible native C toolchain and libusb; a CGO-disabled build is not supported.
+
+To build the container locally:
+
+```bash
+docker build -t air-co2-exporter:0.4.0-dev .
+docker run --rm air-co2-exporter:0.4.0-dev --version
+```
 
 
 ## Usage
@@ -119,7 +151,7 @@ systemctl enable air_co2_exporter
 
 ### Docker
 
-`air_co2_exporter` is supported to be run in a docker container environment with privileged mode. 
+`air_co2_exporter` is supported to be run in a docker container environment with a privileged mode.
 
 [https://hub.docker.com/r/huhamhire/air-co2-exporter](https://hub.docker.com/r/huhamhire/air-co2-exporter)
 
@@ -206,6 +238,9 @@ spec:
 
 * `air_temp` - Ambient Temperature (Tamb) in ℃.
 * `air_co2` - Relative Concentration of CO2 (CntR) in ppm. 
+* `air_rh` - Relative humidity in percent, for devices that report humidity.
+
+All three metrics are gauges with a `tag` label, set by `--label.tag` or `LABEL_TAG`.
 
 
 ## Compatible Devices
@@ -247,8 +282,30 @@ Other `AirCO2NTROL` devices with more metrics have not been tested. Supplement f
    sh: air_co2_exporter: not found
    ```
   
-   Typically seen when used in Apline Linux docker images. Since Alpine image is a compact docker image with the size of only around 5 MB. It does not come with a GNU C library (glibc) by default which golang programs required. A `glibc` library like `libc6-compat` on Alpine is required.
+   This can occur when a CGO binary built against glibc is copied into an Alpine
+   image using musl. Build the binary for the runtime's C library and architecture.
+   The project Dockerfile builds on Alpine with musl and installs libusb in the
+   runtime image; it does not require a glibc compatibility package.
   
+
+## Development
+
+The next planned release is **0.4.0** and has not been published. See
+[CHANGELOG](./CHANGELOG) for pending changes and [AGENTS.md](./AGENTS.md) for
+English maintenance guidelines, compatibility requirements, and release checks.
+
+```bash
+make lint
+make test
+make build
+go mod verify
+```
+
+Tests run without a physical sensor, but the build still requires CGO and libusb.
+Real-device readings and USB disconnect behavior require a separate hardware check.
+Logging uses the standard library's `log/slog` through Prometheus `promslog`.
+The existing `--log.level` and `--log.format` flags remain available; logfmt/JSON
+records now use slog's `time`, `level`, `source`, and `msg` fields.
 
 ## License
 

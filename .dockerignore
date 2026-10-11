@@ -1,6 +1,12 @@
 bin/
 dist/
 
+.idea/
+.vscode/
+.aws/
+.codex/
+.agents/
+
 .dockerignore
 .gitignore
 .travis.yml

@@ -2,18 +2,18 @@ package monitor
 
 import "github.com/google/gousb"
 
-// Device config structure
+// Device identifies a USB sensor by vendor and product ID.
 type Device struct {
 	vid gousb.ID
 	pid gousb.ID
 }
 
-// DefaultDevice - get default device config
+// DefaultDevice returns the supported sensor's default USB IDs.
 func DefaultDevice() Device {
 	return NewDevice(0x04D9, 0xA052)
 }
 
-// NewDevice - create a new Device config instance
+// NewDevice creates a device configuration with the given USB IDs.
 func NewDevice(vid gousb.ID, pid gousb.ID) Device {
 	return Device{vid, pid}
 }
